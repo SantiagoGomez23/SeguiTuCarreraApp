@@ -4,10 +4,10 @@ import androidx.room.Entity
 
 @Entity(
     tableName = "subjects",
-    primaryKeys = ["id", "userId"]
+    primaryKeys = ["code", "userId"]
 )
 data class SubjectEntity(
-    val id: Int = 0,
+    val code: String,
     val userId: String,
     val name: String,
     val year: Int,

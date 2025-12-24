@@ -1,0 +1,349 @@
+{
+  "career": "Licenciatura en Informática",
+  "plan": "2021",
+  "subjects": [
+    {
+      "code": "CNE",
+      "name": "Expresión de Problemas y Algoritmos",
+      "year": 1,
+      "semester": 0,
+      "duration": "6_weeks",
+      "prerequisites": [],
+      "contact_hours": 10043
+    },
+    {
+      "code": "CNC",
+      "name": "Conceptos de Organización de Computadoras",
+      "year": 1,
+      "semester": 0,
+      "duration": "6_weeks",
+      "prerequisites": [],
+      "contact_hours": 10043
+    },
+    {
+      "code": "CNM",
+      "name": "Matemática 0",
+      "year": 1,
+      "semester": 0,
+      "duration": "6_weeks",
+      "prerequisites": [],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI106",
+      "name": "Conceptos de Algoritmos, Datos y Programas",
+      "year": 1,
+      "semester": 1,
+      "duration": "semester",
+      "prerequisites": ["CNE"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI104",
+      "name": "Organización de Computadoras",
+      "year": 1,
+      "semester": 1,
+      "duration": "semester",
+      "prerequisites": ["CNC"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI101",
+      "name": "Matemática 1",
+      "year": 1,
+      "semester": 1,
+      "duration": "semester",
+      "prerequisites": ["CNM"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI107",
+      "name": "Taller de Programación",
+      "year": 1,
+      "semester": 2,
+      "duration": "semester",
+      "prerequisites": ["SI106"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI105",
+      "name": "Arquitectura de Computadoras",
+      "year": 1,
+      "semester": 2,
+      "duration": "semester",
+      "prerequisites": ["SI104"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI102",
+      "name": "Matemática 2",
+      "year": 1,
+      "semester": 2,
+      "duration": "semester",
+      "prerequisites": ["SI101"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI209",
+      "name": "Fundamentos de Organización de Datos",
+      "year": 2,
+      "semester": 3,
+      "duration": "semester",
+      "prerequisites": ["SI107"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI203",
+      "name": "Algoritmos y Estructuras de Datos",
+      "year": 2,
+      "semester": 3,
+      "duration": "semester",
+      "prerequisites": ["SI102", "SI107"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI207",
+      "name": "Seminario de Lenguajes",
+      "year": 2,
+      "semester": 3,
+      "duration": "semester",
+      "prerequisites": ["SI107"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI210",
+      "name": "Diseño de Bases de Datos",
+      "year": 2,
+      "semester": 4,
+      "duration": "semester",
+      "prerequisites": ["SI209"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI202",
+      "name": "Ingeniería de Software 1",
+      "year": 2,
+      "semester": 4,
+      "duration": "semester",
+      "prerequisites": ["SI107"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI206",
+      "name": "Orientación a Objetos 1",
+      "year": 2,
+      "semester": 4,
+      "duration": "semester",
+      "prerequisites": ["SI107"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI204",
+      "name": "Introducción a los Sistemas Operativos",
+      "year": 2,
+      "semester": 4,
+      "duration": "semester",
+      "prerequisites": ["SI107", "SI105"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI208",
+      "name": "Taller de Lecto-comprensión y Traducción en Inglés",
+      "year": 2,
+      "semester": 4,
+      "duration": "semester",
+      "prerequisites": [],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI308",
+      "name": "Matemática 3",
+      "year": 3,
+      "semester": 5,
+      "duration": "semester",
+      "prerequisites": ["SI102"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI302",
+      "name": "Ingeniería de Software 2",
+      "year": 3,
+      "semester": 5,
+      "duration": "semester",
+      "prerequisites": ["SI202", "SI208"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI306",
+      "name": "Conceptos y Paradigmas de Lenguajes de Programación",
+      "year": 3,
+      "semester": 5,
+      "duration": "semester",
+      "prerequisites": ["SI203", "SI207", "SI208"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI307",
+      "name": "Orientación a Objetos 2",
+      "year": 3,
+      "semester": 5,
+      "duration": "semester",
+      "prerequisites": ["SI206", "SI208"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "SI304",
+      "name": "Redes y Comunicaciones",
+      "year": 3,
+      "semester": 6,
+      "duration": "semester",
+      "prerequisites": ["SI102", "SI204", "SI208"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI301",
+      "name": "Programación Concurrente",
+      "year": 3,
+      "semester": 6,
+      "duration": "semester",
+      "prerequisites": ["SI204", "SI207", "SI208"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI305",
+      "name": "Proyecto de Software",
+      "year": 3,
+      "semester": 6,
+      "duration": "semester",
+      "prerequisites": ["SI210", "SI202", "SI203", "SI206", "SI207", "SI208"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "OI309",
+      "name": "Computabilidad y Complejidad",
+      "year": 3,
+      "semester": 6,
+      "duration": "semester",
+      "prerequisites": ["SI203", "SI308", "SI208"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "OI401",
+      "name": "Teoría de la Computación y Verificación de Programas",
+      "year": 4,
+      "semester": 7,
+      "duration": "semester",
+      "prerequisites": ["SI308", "SI306"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI403",
+      "name": "Sistemas Operativos",
+      "year": 4,
+      "semester": 7,
+      "duration": "semester",
+      "prerequisites": ["SI304"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "OI404",
+      "name": "Sistemas Paralelos",
+      "year": 4,
+      "semester": 7,
+      "duration": "semester",
+      "prerequisites": ["SI301"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "OPT1",
+      "name": "Optativa 1",
+      "year": 4,
+      "semester": 7,
+      "duration": "semester",
+      "prerequisites": [],
+      "contact_hours": null
+    },
+
+    {
+      "code": "OI406",
+      "name": "Lógica e Inteligencia Artificial",
+      "year": 4,
+      "semester": 8,
+      "duration": "semester",
+      "prerequisites": ["SI102", "SI306"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI409",
+      "name": "Matemática 4",
+      "year": 4,
+      "semester": 8,
+      "duration": "semester",
+      "prerequisites": ["SI308"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "OI402",
+      "name": "Laboratorio de Software",
+      "year": 4,
+      "semester": 8,
+      "duration": "semester",
+      "prerequisites": ["SI305"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "OI405",
+      "name": "Programación Distribuida y Tiempo Real",
+      "year": 4,
+      "semester": 8,
+      "duration": "semester",
+      "prerequisites": ["SI306", "SI304"],
+      "contact_hours": 10043
+    },
+
+    {
+      "code": "OI502",
+      "name": "Diseño de Experiencia de Usuario",
+      "year": 5,
+      "semester": 9,
+      "duration": "semester",
+      "prerequisites": ["SI302", "OI402"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI504",
+      "name": "Aspectos Sociales y Profesionales de Informática",
+      "year": 5,
+      "semester": 9,
+      "duration": "semester",
+      "prerequisites": ["SI305"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "SI505",
+      "name": "Aspectos Éticos, Sociales y Profesionales Avanzados de Informática",
+      "year": 5,
+      "semester": 9,
+      "duration": "semester",
+      "prerequisites": ["SI305"],
+      "contact_hours": 10043
+    },
+    {
+      "code": "OI503",
+      "name": "Tesina de Licenciatura en Informática",
+      "year": 5,
+      "semester": 9,
+      "duration": "final_project",
+      "prerequisites": ["ALL_1ST_2ND_YEAR_FINALS", "TWO_MORE_FINALS"],
+      "contact_hours": null
+    }
+  ]
+}

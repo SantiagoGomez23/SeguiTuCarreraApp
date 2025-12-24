@@ -13,15 +13,6 @@ interface SubjectDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(subjects: List<SubjectEntity>)
 
-    // 🔹 FORZAR DB (debug / inspector)
-    @Query("SELECT * FROM subjects")
-    suspend fun getAllOnce(): List<SubjectEntity>
-
-    // 🔹 Todas las materias del usuario
-    @Query("SELECT * FROM subjects WHERE userId = :userId")
-    fun getAllByUser(userId: String): Flow<List<SubjectEntity>>
-
-    // ✅ ESTA ES LA CLAVE
     @Query("""
         SELECT * FROM subjects
         WHERE year = :year AND userId = :userId
@@ -31,4 +22,11 @@ interface SubjectDao {
         year: Int,
         userId: String
     ): Flow<List<SubjectEntity>>
+
+    @Query("""
+        SELECT * FROM subjects
+        WHERE userId = :userId
+        ORDER BY year, name
+    """)
+    fun getAllByUser(userId: String): Flow<List<SubjectEntity>>
 }

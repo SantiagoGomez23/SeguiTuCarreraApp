@@ -8,22 +8,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.seguitucarreraapp.data.local.DatabaseProvider
+import com.example.seguitucarreraapp.auth.UserSession
+import com.example.seguitucarreraapp.data.local.AppDatabase
 import com.example.seguitucarreraapp.data.repository.SubjectRepository
-import com.google.firebase.auth.FirebaseAuth
-import kotlin.collections.emptyList
 
 @Composable
 fun HomeScreen() {
 
     val context = LocalContext.current
 
-    // 🔐 Verificamos usuario logueado
-    val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
+    // 🔐 Usuario logueado
+    val userId = remember { UserSession.uid() }
 
-    // 🧱 Base de datos
+    // 🧱 DB (Room)
     val database = remember {
-        DatabaseProvider.getDatabase(context)
+        AppDatabase.getInstance(context)
+
     }
 
     // 📦 Repository
@@ -36,19 +36,16 @@ fun HomeScreen() {
         HomeViewModel(repository)
     }
 
-    // 🔄 Precarga desde JSON (solo una vez y solo si hay usuario)
-    LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
-            viewModel.preloadSubjects(context)
-        }
+    // 🔄 Precarga JSON → Room
+    LaunchedEffect(Unit) {
+        viewModel.preloadSubjects(context)
     }
 
-    // 📡 Observamos materias de 1° año desde Room
+    // 📡 Materias de 1° año
     val subjects by viewModel
-        .subjectsFirstYear()
+        .subjectsByYear(1)
         .collectAsState(initial = emptyList())
 
-    // 🎨 UI
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -64,14 +61,16 @@ fun HomeScreen() {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (!isLoggedIn) {
-                Text("Usuario no logueado")
-            } else if (subjects.isEmpty()) {
+            if (subjects.isEmpty()) {
                 Text("No hay materias para mostrar")
             } else {
                 LazyColumn {
                     items(subjects) { subject ->
-                        SubjectItem(subject = subject)
+                        Text(
+                            text = subject.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
                 }
             }

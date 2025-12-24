@@ -1,17 +1,21 @@
 package com.example.seguitucarreraapp.data.remote
 
 import android.content.Context
-import com.example.seguitucarreraapp.data.SubjectDto
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
-class SubjectLocalDataSource(
-    private val context: Context
-) {
+class SubjectLocalDataSource {
 
-    fun loadSubjects(): List<SubjectDto> {
-        val json = JsonReader.readFromAssets(context, "subjects.json")
-        val type = object : TypeToken<List<SubjectDto>>() {}.type
-        return Gson().fromJson(json, type)
+    fun loadSubjects(context: Context): List<SubjectDto> {
+        val json = context.assets
+            .open("subject.json")
+            .bufferedReader()
+            .use { it.readText() }
+
+        val response = Gson().fromJson(
+            json,
+            SubjectsResponseDto::class.java
+        )
+
+        return response.subjects
     }
 }
