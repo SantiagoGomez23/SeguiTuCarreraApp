@@ -7,7 +7,7 @@ import androidx.room.Entity
     primaryKeys = ["id", "userId"]
 )
 data class SubjectEntity(
-    val id: Int,
+    val id: Int = 0,
     val userId: String,
     val name: String,
     val year: Int,

@@ -7,8 +7,10 @@ import com.example.seguitucarreraapp.data.local.entity.SubjectEntity
 
 @Database(
     entities = [SubjectEntity::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun subjectDao(): SubjectDao
 }
+

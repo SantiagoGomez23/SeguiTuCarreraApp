@@ -1,7 +1,7 @@
 package com.example.seguitucarreraapp.data.remote
 
 import android.content.Context
-import com.example.seguitucarreraapp.data.remote.dto.SubjectDto
+import com.example.seguitucarreraapp.data.SubjectDto
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 

@@ -1,4 +1,4 @@
-package com.example.seguitucarreraapp.data.remote.dto
+package com.example.seguitucarreraapp.data
 
 data class SubjectDto(
     val id: Int,
