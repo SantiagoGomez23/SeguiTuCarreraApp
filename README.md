@@ -1,117 +1,87 @@
-🎓 Seguí Tu Carrera
-Trackeá tu progreso universitario. Visual, simple y motivador.
-<p align="center"> <img src="https://raw.githubusercontent.com/USUARIO/REPO/main/screenshots/banner.png" width="850"/> </p> <p align="center"> <img src="https://img.shields.io/badge/Kotlin-100%25-blueviolet"/> <img src="https://img.shields.io/badge/Jetpack%20Compose-UI-success"/> <img src="https://img.shields.io/badge/Room-SQLite-blue"/> <img src="https://img.shields.io/badge/Firebase-Auth-orange"/> <img src="https://img.shields.io/badge/Status-In%20Development-yellow"/> </p>
-🚀 ¿Qué es Seguí Tu Carrera?
 
-Seguí Tu Carrera es una app Android desarrollada con Kotlin y Jetpack Compose que ayuda a estudiantes universitarios a:
+<p align="center">
+  <img width="1080" height="1080" alt="Logoooooo-Photoroom" src="https://github.com/user-attachments/assets/ce0dee5b-f0df-4cf2-8938-ef805c745f67" />
+</p>
 
-🎯 visualizar su progreso académico
-📚 organizar materias por año
-📊 llevar un control real y persistente de su carrera
-💪 mantenerse motivados durante el recorrido universitario
+# 🎯 Seguí Tu Carrera
 
-Es un proyecto real, pensado desde la experiencia del estudiante y construido con arquitectura profesional.
+**Seguí Tu Carrera** es una aplicación **Android** desarrollada con **Kotlin** y **Jetpack Compose** que está diseñada para empoderar a estudiantes universitarios.
 
-✨ Features destacadas
+Esta app transforma la experiencia de seguimiento académico al permitirte:
 
-✅ Autenticación segura con Firebase Auth
-📦 Persistencia local con Room (SQLite)
-🧠 Arquitectura MVVM + Repository
-📊 UI reactiva con Flow + Compose
-🗂️ Carga inicial de materias desde JSON
-🔐 Datos asociados a cada usuario
-🎨 Diseño moderno inspirado en Figma
+* 🎯 **Visualizar** tu progreso académico de forma clara.
+* 📚 **Organizar** todas tus materias por año.
+* 📊 Llevar un **control real y persistente** de tu carrera.
+* 💪 **Mantenerte motivado** durante todo el recorrido universitario.
 
-📱 Screenshots
-<p align="center"> <img src="https://raw.githubusercontent.com/USUARIO/REPO/main/screenshots/login.png" width="220"/> <img src="https://raw.githubusercontent.com/USUARIO/REPO/main/screenshots/home.png" width="220"/> <img src="https://raw.githubusercontent.com/USUARIO/REPO/main/screenshots/subjects.png" width="220"/> </p>
+Es un proyecto real, pensado desde la experiencia del estudiante y construido con **arquitectura profesional**.
 
-💡 La interfaz evoluciona junto con el proyecto.
+---
 
-🧱 Arquitectura & buenas prácticas
-ui/            → Pantallas (Jetpack Compose)
-viewmodel/     → Lógica de presentación
-data/
- ├─ local/     → Room (Entities, DAO, Database)
- ├─ mapper/    → DTO → Entity
- ├─ repository → Single Source of Truth
-auth/          → Firebase Authentication
+## ✨ Features Destacadas
 
+Implementaciones clave que hacen a la aplicación robusta y moderna:
 
-✔ Separation of Concerns
-✔ Reactive UI
-✔ Escalable y mantenible
-✔ Código orientado a producción
+| Feature | Descripción |
+| :--- | :--- |
+| ✅ **Autenticación** | Integración segura con Firebase Auth. |
+| 📦 **Persistencia** | Base de datos local con **Room (SQLite)**. |
+| 🧠 **Arquitectura** | **MVVM** profesional con capa Repository. |
+| 📊 **UI Reactiva** | Manejo de datos y estados con **Flow + Compose**. |
+| 🗂️ **Carga Inicial** | Pre-carga de materias desde un archivo **JSON**. |
+| 🔐 **Multi-usuario** | Datos académicos asociados a cada usuario logueado. |
+| 🎨 **Diseño** | Interfaz moderna inspirada en Figma y siguiendo Material 3. |
 
-🛠️ Stack tecnológico
+---
 
-Kotlin
+## 🛠️ Stack Tecnológico
 
-Jetpack Compose
+El proyecto está construido sobre un stack moderno y eficiente:
 
-Room (SQLite)
+* **Lenguaje:** Kotlin
+* **UI Toolkit:** Jetpack Compose
+* **Base de Datos:** Room (SQLite)
+* **Autenticación:** Firebase Authentication
+* **Concurrencia:** Coroutines + Flow
+* **Diseño:** Material 3
+* **Serialización:** Gson
+* **Patrón:** MVVM
 
-Firebase Authentication
+---
 
-Coroutines + Flow
+## 🧪 Estado del Proyecto
 
-Material 3
+**🚧 En Desarrollo Activo**
 
-Gson
+### Próximos Hitos:
 
-MVVM
+* ✔ Marcar materias como aprobadas (¡Completado!)
+* 📊 Barra de progreso general de la carrera.
+* 🏆 Logros y elementos de gamificación para motivación.
+* ⏱️ Integración de la técnica Pomodoro para sesiones de estudio.
+* 📂 Organización de pestañas por año/cuatrimestre.
+* 🔒 Control de correlatividades entre materias.
 
-📂 Data preload (JSON → Room)
+---
 
-Las materias se cargan automáticamente desde un archivo JSON:
+## 👨‍💻 Autor
 
-[
-  { "name": "Análisis Matemático I", "year": 1 },
-  { "name": "Álgebra I", "year": 1 },
-  { "name": "Física I", "year": 1 }
-]
+**Santiago Luis Gómez**
 
+* 📍 Argentina
+* 🎓 Estudiante de Lic. en Informatica en la Universidad Nacional de La Plata (UNLP).
+* 📱 Enfocado en desarrollo **Android con Kotlin**
+* 💡 Interesado en UX, arquitectura de apps y la creación de productos reales.
 
-Esto permite:
+---
 
-inicialización limpia
+## ⭐ ¿Te gustó el proyecto?
 
-persistencia local
+Si te resulta útil o interesante para tu propio aprendizaje:
 
-experiencia offline-ready
+* **⭐ Dejá una estrella** en el repositorio.
+* **🍴 Forkealo** para experimentar o contribuir.
+* **🧠 Usalo como referencia** para tus proyectos.
+* **📢 Compartilo** con otros estudiantes y desarrolladores.
 
-🧪 Estado del proyecto
-
-🚧 En desarrollo activo
-
-Próximos hitos:
-
-✔ Marcar materias como aprobadas
-
-📊 Barra de progreso general
-
-🏆 Logros y gamificación
-
-⏱️ Pomodoro para estudio
-
-📂 Tabs por año/cuatrimestre
-
-🔒 Correlatividades
-
-👨‍💻 Autor
-
-Santiago Gómez
-📍 Argentina
-🎓 Estudiante universitario de programación
-📱 Enfocado en desarrollo Android con Kotlin
-💡 Interesado en UX, arquitectura y productos reales
-
-⭐ ¿Te gustó el proyecto?
-
-Si te resulta útil o interesante:
-
-⭐ Dejá una estrella
-🍴 Forkealo
-🧠 Usalo como referencia
-📢 Compartilo
-
-🔥 Seguí tu carrera, paso a paso.
+### 🔥 **Seguí tu carrera, paso a paso.**
