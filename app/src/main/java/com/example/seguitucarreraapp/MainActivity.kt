@@ -13,6 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.seguitucarreraapp.ui.theme.SeguiTuCarreraAppTheme
 import android.util.Log
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraph
+import com.example.seguitucarreraapp.auth.AuthViewModel
+import com.example.seguitucarreraapp.ui.home.HomeScreen
+import com.example.seguitucarreraapp.ui.navigation.NavGraph
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -24,9 +29,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SeguiTuCarreraAppTheme {
-                val auth = FirebaseAuth.getInstance()
-                val currentUser = auth.currentUser
+                // ViewModel de autenticación compartido
+                val authViewModel = viewModel<AuthViewModel>()
 
+                // Navegación principal
+                NavGraph(
+                    authViewModel = authViewModel
+                )
             }
         }
     }

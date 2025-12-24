@@ -84,5 +84,7 @@ dependencies {
     // Firebase Auth
     implementation("com.google.firebase:firebase-auth-ktx")
 
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
 
 }
