@@ -19,7 +19,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+
 import onboardingPages
 
 private val BottomButtonWidth = 72.dp
@@ -51,7 +62,8 @@ fun OnboardingScreen(
                             pagerState.animateScrollToPage(onboardingPages.lastIndex)
                         }
                     },
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
@@ -141,77 +153,115 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun Dot(selected: Boolean) {
+private fun Dot(
+    selected: Boolean
+) {
+    val size by animateDpAsState(
+        targetValue = if (selected) 10.dp else 8.dp,
+        animationSpec = tween(durationMillis = 180),
+        label = "dotSize"
+    )
+
+    val color by animateColorAsState(
+        targetValue =
+            if (selected)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+        animationSpec = tween(durationMillis = 180),
+        label = "dotColor"
+    )
+
     Box(
         modifier = Modifier
-            .size(if (selected) 10.dp else 8.dp)
+            .size(size)
             .clip(CircleShape)
-            .background(
-                if (selected)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-            )
+            .background(color)
     )
 }
 
-/**
- * CONTENIDO DE CADA PÁGINA
- * - Centrado
- * - Subido levemente para efecto onboarding profesional
- */
+
 @Composable
 fun OnboardingPageContent(
     page: OnboardingPage
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        contentAlignment = Alignment.Center
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(
+            animationSpec = tween(durationMillis = 250)
+        ) + slideInVertically(
+            initialOffsetY = { 40 }, // entra desde abajo
+            animationSpec = tween(durationMillis = 250)
+        ),
+        exit = fadeOut(
+            animationSpec = tween(durationMillis = 150)
+        ) + slideOutVertically(
+            targetOffsetY = { -20 },
+            animationSpec = tween(durationMillis = 150)
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-40).dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .background(
+                    if (page.showLogo)
+                        Color(0xFFF5F9FF) // Bienvenida
+                    else
+                        Color(0xFFF3F4F6) // Resto
+                )
+                .padding(horizontal = 24.dp),
+            contentAlignment = Alignment.Center
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(y = (-40).dp), // altura tipo onboarding pro
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
-            if (page.showLogo) {
-                Image(
-                    painter = painterResource(
-                        id = com.example.seguitucarreraapp.R.drawable.ic_logo_sin_texto
+                if (page.showLogo) {
+                    Image(
+                        painter = painterResource(
+                            id = com.example.seguitucarreraapp.R.drawable.ic_logo_sin_texto
+                        ),
+                        contentDescription = "Logo SeguiTuCarrera",
+                        modifier = Modifier
+                            .size(140.dp)
+                            .padding(bottom = 24.dp)
+                    )
+                }
+
+                page.imageRes?.let { image ->
+                    Image(
+                        painter = painterResource(image),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .height(220.dp)
+                            .padding(bottom = 24.dp)
+                    )
+                }
+
+                Text(
+                    text = page.title,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.SemiBold
                     ),
-                    contentDescription = "Logo SeguiTuCarrera",
-                    modifier = Modifier
-                        .size(140.dp)
-                        .padding(bottom = 24.dp)
+                    color = Color(0xFF111827),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = page.description,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        lineHeight = 20.sp
+                    ),
+                    color = Color(0xFF6B7280),
+                    textAlign = TextAlign.Center
                 )
             }
-
-            page.imageRes?.let { image ->
-                Image(
-                    painter = painterResource(image),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .height(220.dp)
-                        .padding(bottom = 24.dp)
-                )
-            }
-
-            Text(
-                text = page.title,
-                style = MaterialTheme.typography.headlineSmall,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = page.description,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
+
