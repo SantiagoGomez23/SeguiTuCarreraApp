@@ -91,4 +91,8 @@ dependencies {
     // Gson
     implementation("com.google.code.gson:gson:2.10.1")
 
+    // Vico Charts (Compose)
+    implementation("com.patrykandpatrick.vico:compose:1.14.0")
+    implementation("com.patrykandpatrick.vico:compose-m3:1.14.0")
+
 }

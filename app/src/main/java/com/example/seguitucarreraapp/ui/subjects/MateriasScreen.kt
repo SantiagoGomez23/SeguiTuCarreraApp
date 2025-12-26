@@ -14,110 +14,133 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import com.example.seguitucarreraapp.ui.home.SubjectItem
+import com.example.seguitucarreraapp.ui.statistics.StatisticsSection
 
 @Composable
 fun MateriasScreen(
     viewModel: SubjectsViewModel
 ) {
     val userStatuses by viewModel.userStatuses.collectAsState()
-    val years = viewModel.availableYears()
 
+    val years = viewModel.availableYears()
     var selectedYear by remember { mutableStateOf(years.first()) }
 
     val subjectsByYear = viewModel.subjectsByYear(selectedYear)
+    val subjectsBySemester = subjectsByYear.groupBy { it.semester }
 
-    // 📊 Cálculos para progreso
+    // ───── PROGRESO GLOBAL ─────
     val totalSubjects = viewModel.subjects.size
     val approvedSubjects = userStatuses.values.count { it.isApproved() }
-
     val progress =
         if (totalSubjects == 0) 0f
         else approvedSubjects.toFloat() / totalSubjects.toFloat()
 
-    Column(
+    // ───── PROMEDIO ─────
+    val gradedSubjects = userStatuses.values.filter { it.hasGrade() }
+    val average =
+        if (gradedSubjects.isEmpty()) null
+        else gradedSubjects.mapNotNull { it.grade }.average()
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F4F6))
-            .padding(16.dp)
+            .background(Color(0xFFF3F4F6)),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        /* ───────── SALUDO ───────── */
-
-        Text(
-            text = "¡Hola!",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Así va tu progreso en ${viewModel.currentCareer.name}",
-            color = Color(0xFF6B7280)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        /* ───────── PROGRESO ───────── */
-
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-
+        /* ───── SALUDO ───── */
+        item {
+            Column {
                 Text(
-                    text = "Progreso de la carrera",
-                    color = Color(0xFF6B7280)
+                    text = "¡Hola!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.SemiBold
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
-                    text = "${(progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                LinearProgressIndicator(
-                    progress = progress,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = Color(0xFFE5E7EB)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "$approvedSubjects de $totalSubjects materias aprobadas",
+                    text = "Así va tu progreso en ${viewModel.currentCareer.name}",
                     color = Color(0xFF6B7280)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        /* ───── PROGRESO + PROMEDIO ───── */
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
 
-        /* ───────── TABS POR AÑO ───────── */
+                    Text(
+                        text = "Progreso de la carrera",
+                        color = Color(0xFF6B7280)
+                    )
 
-        YearTabs(
-            years = years,
-            selectedYear = selectedYear,
-            onYearSelected = { selectedYear = it }
-        )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "${(progress * 100).toInt()}%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
 
-        /* ───────── LISTA DE MATERIAS ───────── */
+                    Spacer(modifier = Modifier.height(12.dp))
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(subjectsByYear) { subject ->
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                    )
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "$approvedSubjects de $totalSubjects materias aprobadas",
+                        color = Color(0xFF6B7280)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (average != null) {
+                        Text(
+                            text = "Promedio: ${String.format("%.2f", average)}",
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Text(
+                            text = "Promedio: —",
+                            color = Color(0xFF9CA3AF)
+                        )
+                    }
+                }
+            }
+        }
+
+        /* ───── TABS DE AÑO ───── */
+        item {
+            YearTabs(
+                years = years,
+                selectedYear = selectedYear,
+                onYearSelected = { selectedYear = it }
+            )
+        }
+
+        /* ───── MATERIAS POR SEMESTRE ───── */
+        subjectsBySemester.forEach { (semester, subjects) ->
+
+            item {
+                Text(
+                    text = if (semester == 1) "1° Semestre" else "2° Semestre",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            items(subjects) { subject ->
                 val status = userStatuses[subject.id]
                     ?: UserSubjectStatus(
                         subjectId = subject.id,
@@ -138,125 +161,54 @@ fun MateriasScreen(
                 )
             }
         }
+
+        /* ───── ESTADÍSTICAS ───── */
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+            StatisticsSection(
+                progressByYear = viewModel.progressByYear()
+            )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
-/* ───────── Tabs por año ───────── */
-
 @Composable
-private fun YearTabs(
+fun YearTabs(
     years: List<Int>,
     selectedYear: Int,
     onYearSelected: (Int) -> Unit
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         years.forEach { year ->
             val selected = year == selectedYear
 
-            Box(
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = if (selected)
+                    MaterialTheme.colorScheme.primary
+                else
+                    Color(0xFFE5E7EB),
+                tonalElevation = if (selected) 2.dp else 0.dp,
                 modifier = Modifier
-                    .background(
-                        if (selected)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            Color(0xFFE5E7EB),
-                        RoundedCornerShape(20.dp)
-                    )
                     .clickable { onYearSelected(year) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = "${year}° Año",
-                    color = if (selected) Color.White else Color.Black
+                    modifier = Modifier.padding(
+                        horizontal = 16.dp,
+                        vertical = 8.dp
+                    ),
+                    color = if (selected) Color.White else Color.Black,
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
     }
 }
-
-/* ───────── Item materia ───────── */
-
-@Composable
-private fun SubjectItem(
-    subjectName: String,
-    userStatus: UserSubjectStatus,
-    onStatusChange: (SubjectStatus, Int?) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    var gradeText by remember { mutableStateOf(userStatus.grade?.toString() ?: "") }
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(Modifier.padding(16.dp)) {
-
-            Text(
-                text = subjectName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = statusLabel(userStatus.status),
-                color = statusColor(userStatus.status),
-                modifier = Modifier.clickable { expanded = true }
-            )
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                SubjectStatus.values().forEach { status ->
-                    DropdownMenuItem(
-                        text = { Text(statusLabel(status)) },
-                        onClick = {
-                            expanded = false
-                            gradeText = ""
-                            onStatusChange(status, null)
-                        }
-                    )
-                }
-            }
-
-            if (userStatus.requiresGrade()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = gradeText,
-                    onValueChange = {
-                        gradeText = it
-                        onStatusChange(
-                            userStatus.status,
-                            it.toIntOrNull()
-                        )
-                    },
-                    label = { Text("Nota") },
-                    singleLine = true,
-                    modifier = Modifier.width(120.dp)
-                )
-            }
-        }
-    }
-}
-
-/* ───────── Helpers ───────── */
-
-private fun statusLabel(status: SubjectStatus): String =
-    when (status) {
-        SubjectStatus.NOT_STARTED -> "No cursada"
-        SubjectStatus.IN_PROGRESS -> "Cursando"
-        SubjectStatus.COURSE_APPROVED -> "Cursada aprobada (dar final)"
-        SubjectStatus.PROMOTED -> "Promocionada"
-        SubjectStatus.FINAL_APPROVED -> "Final aprobado"
-    }
-
-private fun statusColor(status: SubjectStatus): Color =
-    when (status) {
-        SubjectStatus.NOT_STARTED -> Color.Gray
-        SubjectStatus.IN_PROGRESS -> Color(0xFF2563EB)
-        SubjectStatus.COURSE_APPROVED -> Color(0xFFF59E0B)
-        SubjectStatus.PROMOTED -> Color(0xFF16A34A)
-        SubjectStatus.FINAL_APPROVED -> Color(0xFF15803D)
-    }

@@ -2,12 +2,13 @@ package com.example.seguitucarreraapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.seguitucarreraapp.auth.AuthScreen
 import com.example.seguitucarreraapp.auth.AuthViewModel
-import com.example.seguitucarreraapp.ui.home.HomeScreen
+import com.example.seguitucarreraapp.data.local.AppDatabase
 import com.example.seguitucarreraapp.ui.subjects.MateriasScreen
 import com.example.seguitucarreraapp.ui.subjects.SubjectsViewModel
 
@@ -16,9 +17,17 @@ fun NavGraph(
     authViewModel: AuthViewModel
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
-    // 🔑 ViewModel compartido entre pantallas
-    val subjectsViewModel = remember { SubjectsViewModel() }
+    // 🗄️ Base de datos
+    val database = remember {
+        AppDatabase.getInstance(context)
+    }
+
+    // 🔑 ViewModel con Room
+    val subjectsViewModel = remember {
+        SubjectsViewModel()
+    }
 
     val startDestination =
         if (authViewModel.isLoggedIn) Routes.Home.route
@@ -41,17 +50,11 @@ fun NavGraph(
             )
         }
 
-        composable(Routes.Home.route) {
-            HomeScreen(
-                viewModel = subjectsViewModel
-            )
-        }
-
+        // 🏠 HOME = Materias
         composable(Routes.Home.route) {
             MateriasScreen(
                 viewModel = subjectsViewModel
             )
         }
-
     }
 }

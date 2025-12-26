@@ -1,85 +1,135 @@
 package com.example.seguitucarreraapp.ui.subjects
 
 import androidx.lifecycle.ViewModel
-import com.example.seguitucarreraapp.data.model.Career
-import com.example.seguitucarreraapp.data.model.SubjectStatus
-import com.example.seguitucarreraapp.data.model.UserSubjectStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import com.example.seguitucarreraapp.data.model.SubjectStatus
+import com.example.seguitucarreraapp.data.model.UserSubjectStatus
 
-data class SubjectUi(
+// Modelo simple de materia (si ya tenés uno, usá el tuyo)
+data class Subject(
     val id: String,
     val name: String,
-    val year: Int
+    val year: Int,
+    val semester: Int // 1 o 2
+)
+
+
+// Modelo simple de carrera (si ya tenés uno, usá el tuyo)
+data class Career(
+    val id: String,
+    val name: String,
+    val years: Int
 )
 
 class SubjectsViewModel : ViewModel() {
 
-    // 🎓 Carrera mock (lista para escalar)
+    // Carrera actual (mock por ahora)
     val currentCareer = Career(
-        id = "CAREER_SYS",
-        name = "Ingeniería en Sistemas"
+        id = "systems",
+        name = "Lic. en Informatica",
+        years = 5
     )
 
-    // 📚 Materias mock (años reales)
-    val subjects = listOf(
-        SubjectUi("ALG_1", "Álgebra I", 1),
-        SubjectUi("ANA_1", "Análisis Matemático I", 1),
-        SubjectUi("FIS_1", "Física I", 1),
-        SubjectUi("PROG_1", "Programación I", 1),
+    // Materias (mock por ahora)
+    val subjects: List<Subject> = listOf(
 
-        SubjectUi("MAT_2", "Matemática II", 2),
-        SubjectUi("PROG_2", "Programación II", 2),
+        // ───── 1° AÑO – 1° SEMESTRE ─────
+        Subject("cadp", "Conceptos de Algoritmos, Datos y Programas", 1, 1),
+        Subject("orgcomp", "Organización de Computadoras", 1, 1),
+        Subject("mat1", "Matemática 1", 1, 1),
 
-        SubjectUi("BD_3", "Bases de Datos", 3),
-        SubjectUi("SO_3", "Sistemas Operativos", 3),
+        // ───── 1° AÑO – 2° SEMESTRE ─────
+        Subject("tallerprog", "Taller de Programación", 1, 2),
+        Subject("arqcomp", "Arquitectura de Computadoras", 1, 2),
+        Subject("mat2", "Matemática 2", 1, 2),
 
-        SubjectUi("ING_4", "Ingeniería de Software", 4),
+        // ───── 2° AÑO – 1° SEMESTRE ─────
+        Subject("fod", "Fundamentos de Organización de Datos", 2, 1),
+        Subject("ayed", "Algoritmos y Estructuras de Datos", 2, 1),
+        Subject("seminario", "Seminario de Lenguajes", 2, 1),
+        Subject("mat3", "Matemática 3", 2, 1),
 
-        SubjectUi("PROY_5", "Proyecto Final", 5)
+        // ───── 2° AÑO – 2° SEMESTRE ─────
+        Subject("bdd", "Diseño de Bases de Datos", 2, 2),
+        Subject("introso", "Introducción a los Sistemas Operativos", 2, 2),
+        Subject("oo1", "Orientación a Objetos 1", 2, 2),
+
+        // ───── 3° AÑO – 1° SEMESTRE ─────
+        Subject("ingsoft1", "Ingeniería de Software 1", 3, 1),
+        Subject("paradigmas", "Conceptos y Paradigmas de Lenguajes de Programación", 3, 1),
+        Subject("redes", "Redes y Comunicaciones", 3, 1),
+
+        // ───── 3° AÑO – 2° SEMESTRE ─────
+        Subject("oo2", "Orientación a Objetos 2", 3, 2),
+        Subject("concurrente", "Programación Concurrente", 3, 2),
+        Subject("labsoft", "Laboratorio de Software", 3, 2),
+
+        // ───── 4° AÑO – 1° SEMESTRE ─────
+        Subject("so", "Sistemas Operativos", 4, 1),
+        Subject("computabilidad", "Computabilidad y Complejidad", 4, 1),
+
+        // ───── 4° AÑO – 2° SEMESTRE ─────
+        Subject("distribuida", "Programación Distribuida y Tiempo Real", 4, 2),
+        Subject("ux", "Diseño de Experiencia de Usuario", 4, 2),
+        Subject("mat4", "Matemática 4", 4, 2),
+
+        // ───── 5° AÑO ─────
+        Subject("proyecto", "Proyecto de Software", 5, 1),
+        Subject("aspectos", "Aspectos Sociales y Profesionales de Informática", 5, 1),
+        Subject("tesina", "Tesina de Licenciatura", 5, 2)
     )
 
-    // 👤 Estado del usuario por materia
+
+
+    // Estado del usuario por materia
     private val _userStatuses =
-        MutableStateFlow(
-            subjects.associate { subject ->
-                subject.id to UserSubjectStatus(
-                    subjectId = subject.id,
-                    careerId = currentCareer.id,
-                    status = SubjectStatus.NOT_STARTED
-                )
-            }
-        )
+        MutableStateFlow<Map<String, UserSubjectStatus>>(emptyMap())
 
     val userStatuses: StateFlow<Map<String, UserSubjectStatus>> = _userStatuses
 
-    // 🔄 Update estado
+    // 🔄 Actualizar estado de una materia
     fun updateStatus(
         subjectId: String,
         status: SubjectStatus,
-        grade: Int? = null
+        grade: Int?
     ) {
-        _userStatuses.update { current ->
-            current.toMutableMap().apply {
-                put(
-                    subjectId,
-                    UserSubjectStatus(
-                        subjectId = subjectId,
-                        careerId = currentCareer.id,
-                        status = status,
-                        grade = grade
-                    )
-                )
+        val updated = _userStatuses.value.toMutableMap()
+
+        updated[subjectId] = UserSubjectStatus(
+            subjectId = subjectId,
+            careerId = currentCareer.id,
+            status = status,
+            grade = grade
+        )
+
+        _userStatuses.value = updated
+    }
+
+    // 📅 Años disponibles según la carrera
+    fun availableYears(): List<Int> =
+        (1..currentCareer.years).toList()
+
+    // 📘 Materias filtradas por año
+    fun subjectsByYear(year: Int): List<Subject> =
+        subjects.filter { it.year == year }
+
+    // 📊 PROGRESO POR AÑO (ESTA ERA LA FUNCIÓN QUE FALTABA)
+    fun progressByYear(): Map<Int, Float> {
+        val years = (1..currentCareer.years).toList()
+
+        return years.associateWith { year ->
+            val subjectsOfYear = subjects.filter { it.year == year }
+
+            if (subjectsOfYear.isEmpty()) {
+                0f
+            } else {
+                val approved = subjectsOfYear.count { subject ->
+                    userStatuses.value[subject.id]?.isApproved() == true
+                }
+                approved.toFloat() / subjectsOfYear.size.toFloat()
             }
         }
     }
 
-    // 📆 Años disponibles (DINÁMICOS)
-    fun availableYears(): List<Int> =
-        subjects.map { it.year }.distinct().sorted()
-
-    // 📚 Materias por año
-    fun subjectsByYear(year: Int): List<SubjectUi> =
-        subjects.filter { it.year == year }
 }
