@@ -1,21 +1,19 @@
 package com.example.seguitucarreraapp.ui.home
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
-
+import com.example.seguitucarreraapp.data.model.requiresGrade
 
 @Composable
 fun SubjectItem(
@@ -23,19 +21,33 @@ fun SubjectItem(
     userStatus: UserSubjectStatus,
     onStatusChange: (SubjectStatus, Int?) -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
-    var gradeText by remember { mutableStateOf(userStatus.grade?.toString() ?: "") }
+
+    var gradeText by remember(userStatus.grade) {
+        mutableStateOf(userStatus.grade?.toString() ?: "")
+    }
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                // 👉 cerrar input al tocar fuera
+                focusManager.clearFocus()
+            }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
 
             Text(
                 text = subjectName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -55,51 +67,80 @@ fun SubjectItem(
                         text = { Text(statusLabel(status)) },
                         onClick = {
                             expanded = false
-                            gradeText = ""
-                            onStatusChange(status, null)
+
+                            val requires = status.requiresGrade()
+                            gradeText = if (requires) gradeText else ""
+
+                            onStatusChange(
+                                status,
+                                if (requires) gradeText.toIntOrNull() else null
+                            )
+
+                            focusManager.clearFocus()
                         }
                     )
                 }
             }
 
-            if (userStatus.requiresGrade()) {
-                Spacer(modifier = Modifier.height(8.dp))
+            if (userStatus.status.requiresGrade()) {
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = gradeText,
-                    onValueChange = {
-                        gradeText = it
-                        onStatusChange(
-                            userStatus.status,
-                            it.toIntOrNull()
-                        )
+                    onValueChange = { newValue ->
+                        val filtered = filterGradeInput(newValue)
+
+                        if (filtered != gradeText) {
+                            gradeText = filtered
+                            onStatusChange(
+                                userStatus.status,
+                                filtered.toIntOrNull()
+                            )
+                        }
                     },
-                    label = { Text("Nota") },
+                    label = { Text("Nota (0 a 10)") },
                     singleLine = true,
-                    modifier = Modifier.width(120.dp)
+                    modifier = Modifier.width(160.dp)
                 )
             }
         }
     }
 }
 
-fun statusLabel(status: SubjectStatus): String {
-    return when (status) {
+/* ───── Helpers ───── */
+
+fun statusLabel(status: SubjectStatus): String =
+    when (status) {
         SubjectStatus.NOT_STARTED -> "No cursada"
         SubjectStatus.IN_PROGRESS -> "Cursando"
         SubjectStatus.COURSE_APPROVED -> "Cursada aprobada (dar final)"
         SubjectStatus.PROMOTED -> "Promocionada"
         SubjectStatus.FINAL_APPROVED -> "Final aprobado"
     }
-}
 
-fun statusColor(status: SubjectStatus): Color {
-    return when (status) {
-        SubjectStatus.NOT_STARTED -> Color.Gray
-        SubjectStatus.IN_PROGRESS -> Color(0xFF2563EB) // azul
-        SubjectStatus.COURSE_APPROVED -> Color(0xFFF59E0B) // amarillo
-        SubjectStatus.PROMOTED -> Color(0xFF16A34A) // verde
-        SubjectStatus.FINAL_APPROVED -> Color(0xFF15803D) // verde oscuro
+fun statusColor(status: SubjectStatus): Color =
+    when (status) {
+        SubjectStatus.NOT_STARTED -> Color(0xFF6B7280)
+        SubjectStatus.IN_PROGRESS -> Color(0xFF2563EB)
+        SubjectStatus.COURSE_APPROVED -> Color(0xFFF59E0B)
+        SubjectStatus.PROMOTED -> Color(0xFF16A34A)
+        SubjectStatus.FINAL_APPROVED -> Color(0xFF15803D)
+    }
+
+/* ───── Validación Nota ───── */
+
+private fun filterGradeInput(input: String): String {
+    if (input.isEmpty()) return ""
+
+    if (!input.all { it.isDigit() }) return ""
+
+    if (input == "0") return "0"
+    if (input.startsWith("0")) return "0"
+
+    val number = input.toIntOrNull() ?: return ""
+
+    return when {
+        number > 10 -> "10"
+        else -> number.toString()
     }
 }
-

@@ -1,9 +1,13 @@
 package com.example.seguitucarreraapp.ui.subjects
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -14,139 +18,136 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import com.example.seguitucarreraapp.ui.SectionDivider
 import com.example.seguitucarreraapp.ui.home.SubjectItem
+import com.example.seguitucarreraapp.ui.insights.InsightCard
 import com.example.seguitucarreraapp.ui.statistics.StatisticsSection
 
 @Composable
 fun MateriasScreen(
     viewModel: SubjectsViewModel
 ) {
+    /* ───── Estado local ───── */
+    var selectedYear by remember { mutableStateOf(1) }
     val userStatuses by viewModel.userStatuses.collectAsState()
+    val insights = viewModel.getInsights()
 
-    val years = viewModel.availableYears()
-    var selectedYear by remember { mutableStateOf(years.first()) }
+    val career = viewModel.currentCareer
+    val subjectsOfYear = viewModel.subjectsByYear(selectedYear)
+    val subjectsBySemester = subjectsOfYear.groupBy { it.semester }
 
-    val subjectsByYear = viewModel.subjectsByYear(selectedYear)
-    val subjectsBySemester = subjectsByYear.groupBy { it.semester }
+    val progressByYear = viewModel.progressByYear()
+    val careerProgress = progressByYear.values.average().toFloat()
 
-    // ───── PROGRESO GLOBAL ─────
-    val totalSubjects = viewModel.subjects.size
-    val approvedSubjects = userStatuses.values.count { it.isApproved() }
-    val progress =
-        if (totalSubjects == 0) 0f
-        else approvedSubjects.toFloat() / totalSubjects.toFloat()
+    val approvedCount = userStatuses.values.count { it.isApproved() }
 
-    // ───── PROMEDIO ─────
-    val gradedSubjects = userStatuses.values.filter { it.hasGrade() }
-    val average =
-        if (gradedSubjects.isEmpty()) null
-        else gradedSubjects.mapNotNull { it.grade }.average()
+    val averageGrade = userStatuses.values
+        .mapNotNull { it.grade }
+        .takeIf { it.isNotEmpty() }
+        ?.average()
+
+    /* ───── Animación saludo ───── */
+    var showGreeting by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        showGreeting = true
+    }
+
+    val userName = "Santiago"
 
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F4F6)),
+            .background(Color(0xFFF3F4F6))
+            .padding(top = 12.dp),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        /* ───── SALUDO ───── */
+        /* ───── Saludo animado ───── */
         item {
-            Column {
-                Text(
-                    text = "¡Hola!",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Así va tu progreso en ${viewModel.currentCareer.name}",
-                    color = Color(0xFF6B7280)
-                )
-            }
-        }
-
-        /* ───── PROGRESO + PROMEDIO ───── */
-        item {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            AnimatedVisibility(
+                visible = showGreeting,
+                enter = slideInVertically(
+                    initialOffsetY = { -40 },
+                    animationSpec = tween(400)
+                ) + fadeIn(animationSpec = tween(400))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-
+                Column {
                     Text(
-                        text = "Progreso de la carrera",
+                        text = "¡Hola, $userName! 👋",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Así va tu progreso en ${career.name}",
                         color = Color(0xFF6B7280)
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "${(progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LinearProgressIndicator(
-                        progress = progress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "$approvedSubjects de $totalSubjects materias aprobadas",
-                        color = Color(0xFF6B7280)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (average != null) {
-                        Text(
-                            text = "Promedio: ${String.format("%.2f", average)}",
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    } else {
-                        Text(
-                            text = "Promedio: —",
-                            color = Color(0xFF9CA3AF)
-                        )
-                    }
                 }
             }
         }
 
-        /* ───── TABS DE AÑO ───── */
+        /* ───── Progreso general ───── */
+        item {
+            Card(shape = RoundedCornerShape(16.dp)) {
+                Column(Modifier.padding(16.dp)) {
+
+                    Text("Progreso de la carrera", color = Color(0xFF6B7280))
+
+                    Text(
+                        text = "${(careerProgress * 100).toInt()}%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    LinearProgressIndicator(
+                        progress = { careerProgress },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Text(
+                        "$approvedCount de ${viewModel.subjects.size} materias aprobadas",
+                        color = Color(0xFF6B7280)
+                    )
+
+                    Text(
+                        averageGrade?.let {
+                            "Promedio: ${"%.2f".format(it)}"
+                        } ?: "Promedio: —",
+                        color = Color(0xFF6B7280)
+                    )
+                }
+            }
+        }
+
+        /* ───── Tabs de años ───── */
         item {
             YearTabs(
-                years = years,
+                years = viewModel.availableYears(),
                 selectedYear = selectedYear,
-                onYearSelected = { selectedYear = it }
+                onYearSelected = { }
             )
         }
 
-        /* ───── MATERIAS POR SEMESTRE ───── */
+        /* ───── Materias ───── */
         subjectsBySemester.forEach { (semester, subjects) ->
 
             item {
                 Text(
-                    text = if (semester == 1) "1° Semestre" else "2° Semestre",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = "$semester° Semestre",
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
             items(subjects) { subject ->
-                val status = userStatuses[subject.id]
-                    ?: UserSubjectStatus(
-                        subjectId = subject.id,
-                        careerId = viewModel.currentCareer.id,
-                        status = SubjectStatus.NOT_STARTED
-                    )
+                val status =
+                    userStatuses[subject.id]
+                        ?: UserSubjectStatus(
+                            subjectId = subject.id,
+                            careerId = career.id,
+                            status = SubjectStatus.NOT_STARTED,
+                            grade = null
+                        )
 
                 SubjectItem(
                     subjectName = subject.name,
@@ -162,19 +163,39 @@ fun MateriasScreen(
             }
         }
 
-        /* ───── ESTADÍSTICAS ───── */
         item {
-            Spacer(modifier = Modifier.height(24.dp))
-            StatisticsSection(
-                progressByYear = viewModel.progressByYear()
-            )
+            SectionDivider()
+        }
+
+        /* ───── Insights ───── */
+        if (insights.isNotEmpty()) {
+            item {
+                Text(
+                    text = "💡 Datos interesantes",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            items(insights) { insight ->
+                InsightCard(insight = insight)
+            }
         }
 
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            SectionDivider()
+        }
+
+        /* ───── Estadísticas ───── */
+        item {
+            StatisticsSection(
+                progressByYear = progressByYear
+            )
         }
     }
 }
+
+/* ───── YearTabs ───── */
 
 @Composable
 fun YearTabs(
@@ -182,33 +203,16 @@ fun YearTabs(
     selectedYear: Int,
     onYearSelected: (Int) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        years.forEach { year ->
-            val selected = year == selectedYear
-
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = if (selected)
-                    MaterialTheme.colorScheme.primary
-                else
-                    Color(0xFFE5E7EB),
-                tonalElevation = if (selected) 2.dp else 0.dp,
-                modifier = Modifier
-                    .clickable { onYearSelected(year) }
-            ) {
-                Text(
-                    text = "${year}° Año",
-                    modifier = Modifier.padding(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
-                    ),
-                    color = if (selected) Color.White else Color.Black,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
+        items(years) { year ->
+            FilterChip(
+                selected = year == selectedYear,
+                onClick = { onYearSelected(year) },
+                label = { Text("${year}° Año") }
+            )
         }
     }
 }

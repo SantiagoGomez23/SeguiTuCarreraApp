@@ -47,13 +47,48 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.media3.database)
-    implementation(libs.androidx.ui)
+
+    // ❌ ELIMINADO: implementation(libs.androidx.ui)
+
+    // Navigation
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
+
+    // Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    implementation(libs.androidx.compose.foundation)
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // Animaciones
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
+
+    // Charts (Vico)
+    implementation("com.patrykandpatrick.vico:compose:1.15.0")
+    implementation("com.patrykandpatrick.vico:compose-m3:1.15.0")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Gson
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Compose Text (CLAVE para KeyboardOptions)
+    implementation("androidx.compose.ui:ui-text")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -61,38 +96,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-
-    // ViewModel + State
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
-
-    // Persistencia de Datos = Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
-
-    // Celebraciones de Logros
-    implementation("com.airbnb.android:lottie-compose:6.4.0")
-
-    // Graficos Charts
-    implementation("com.patrykandpatrick.vico:compose:1.15.0")
-
-    // Firebase Bom
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
-
-    // Firebase Auth
-    implementation("com.google.firebase:firebase-auth-ktx")
-
-    // Gson
-    implementation("com.google.code.gson:gson:2.10.1")
-
-    // Vico Charts (Compose)
-    implementation("com.patrykandpatrick.vico:compose:1.14.0")
-    implementation("com.patrykandpatrick.vico:compose-m3:1.14.0")
-
 }

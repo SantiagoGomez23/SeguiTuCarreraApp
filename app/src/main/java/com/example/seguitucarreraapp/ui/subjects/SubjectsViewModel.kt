@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import com.example.seguitucarreraapp.ui.insights.Insight
+import com.example.seguitucarreraapp.ui.insights.InsightType
+
+
 
 // Modelo simple de materia (si ya tenés uno, usá el tuyo)
 data class Subject(
@@ -131,5 +135,79 @@ class SubjectsViewModel : ViewModel() {
             }
         }
     }
+
+    // ───── INSIGHTS AUTOMÁTICOS ─────
+
+    fun getInsights(): List<Insight> {
+        val insights = mutableListOf<Insight>()
+
+        addPendingFinalsInsight(insights)
+        addMostDelayedYearInsight(insights)
+        addAverageInsight(insights)
+
+        return insights
+    }
+
+    private fun addPendingFinalsInsight(insights: MutableList<Insight>) {
+        val pendingFinals = userStatuses.value.values.count {
+            it.status == SubjectStatus.COURSE_APPROVED
+        }
+
+        if (pendingFinals > 0) {
+            insights.add(
+                Insight(
+                    icon = "📌",
+                    message = "Tenés $pendingFinals materias con cursada aprobada pendientes de final",
+                    type = InsightType.WARNING
+                )
+            )
+        }
+    }
+
+
+    private fun addMostDelayedYearInsight(insights: MutableList<Insight>) {
+        val progress = progressByYear()
+        val mostDelayed = progress.minByOrNull { it.value }
+
+        mostDelayed?.let { (year, value) ->
+            if (value < 1f) {
+                insights.add(
+                    Insight(
+                        icon = "📊",
+                        message = "El ${year}° año es el que más te falta completar",
+                        type = InsightType.INFO
+                    )
+                )
+            }
+        }
+    }
+
+
+    private fun addAverageInsight(insights: MutableList<Insight>) {
+        val grades = userStatuses.value.values
+            .filter { it.hasGrade() }
+            .mapNotNull { it.grade }
+
+        if (grades.isNotEmpty()) {
+            val average = grades.average()
+
+            insights.add(
+                Insight(
+                    icon = if (average < 6) "⚠️" else "⭐",
+                    message =
+                        if (average < 6)
+                            "Tu promedio es ${"%.2f".format(average)}. Tal vez convenga priorizar finales"
+                        else
+                            "¡Muy bien! Tu promedio actual es ${"%.2f".format(average)}",
+                    type = if (average < 6)
+                        InsightType.WARNING
+                    else
+                        InsightType.SUCCESS
+                )
+            )
+        }
+    }
+
+
 
 }

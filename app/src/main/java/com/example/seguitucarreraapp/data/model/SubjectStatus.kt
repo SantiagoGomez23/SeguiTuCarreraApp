@@ -12,3 +12,6 @@ enum class SubjectStatus {
 
     FINAL_APPROVED      // Final aprobado (con nota)
 }
+fun SubjectStatus.requiresGrade(): Boolean {
+    return this == SubjectStatus.PROMOTED || this == SubjectStatus.FINAL_APPROVED
+}

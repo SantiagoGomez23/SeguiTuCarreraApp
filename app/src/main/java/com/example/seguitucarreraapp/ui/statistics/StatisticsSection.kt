@@ -15,7 +15,7 @@ fun StatisticsSection(
 ) {
     Text(
         text = "📊 Estadísticas",
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.SemiBold
     )
 
