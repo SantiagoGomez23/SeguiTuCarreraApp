@@ -1,5 +1,6 @@
 package com.example.seguitucarreraapp.ui.navigation
 
+import Routes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -8,7 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.seguitucarreraapp.auth.AuthScreen
 import com.example.seguitucarreraapp.auth.AuthViewModel
-import com.example.seguitucarreraapp.data.local.AppDatabase
+import com.example.seguitucarreraapp.data.preferences.CareerPreferences
+import com.example.seguitucarreraapp.ui.home.HomeScreen
 import com.example.seguitucarreraapp.ui.subjects.MateriasScreen
 import com.example.seguitucarreraapp.ui.subjects.SubjectsViewModel
 
@@ -19,14 +21,12 @@ fun NavGraph(
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // 🗄️ Base de datos
-    val database = remember {
-        AppDatabase.getInstance(context)
+    val careerPreferences = remember {
+        CareerPreferences(context)
     }
 
-    // 🔑 ViewModel con Room
     val subjectsViewModel = remember {
-        SubjectsViewModel()
+        SubjectsViewModel(careerPreferences)
     }
 
     val startDestination =
@@ -50,11 +50,12 @@ fun NavGraph(
             )
         }
 
-        // 🏠 HOME = Materias
         composable(Routes.Home.route) {
             MateriasScreen(
                 viewModel = subjectsViewModel
             )
         }
+
     }
 }
+

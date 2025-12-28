@@ -3,96 +3,53 @@ package com.example.seguitucarreraapp.ui.subjects
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import com.example.seguitucarreraapp.data.preferences.CareerPreferences
 import com.example.seguitucarreraapp.ui.insights.Insight
 import com.example.seguitucarreraapp.ui.insights.InsightType
+import com.example.seguitucarreraapp.ui.subjects.model.Career
+import com.example.seguitucarreraapp.ui.subjects.model.Subject
 
+class SubjectsViewModel(careerPreferences: CareerPreferences) : ViewModel() {
 
+    /* ───── Carreras ───── */
 
-// Modelo simple de materia (si ya tenés uno, usá el tuyo)
-data class Subject(
-    val id: String,
-    val name: String,
-    val year: Int,
-    val semester: Int // 1 o 2
-)
+    val careers: List<Career> = SubjectsData.careers
 
+    private val _selectedCareerId =
+        MutableStateFlow(SubjectsData.careers.first().id)
 
-// Modelo simple de carrera (si ya tenés uno, usá el tuyo)
-data class Career(
-    val id: String,
-    val name: String,
-    val years: Int
-)
+    val selectedCareerId: StateFlow<String> =
+        _selectedCareerId.asStateFlow()
 
-class SubjectsViewModel : ViewModel() {
+    val selectedCareer: Career
+        get() = SubjectsData.careerById(_selectedCareerId.value)
 
-    // Carrera actual (mock por ahora)
-    val currentCareer = Career(
-        id = "systems",
-        name = "Lic. en Informatica",
-        years = 5
-    )
+    fun selectCareer(careerId: String) {
+        _selectedCareerId.value = careerId
+    }
 
-    // Materias (mock por ahora)
-    val subjects: List<Subject> = listOf(
+    /* ───── Materias ───── */
 
-        // ───── 1° AÑO – 1° SEMESTRE ─────
-        Subject("cadp", "Conceptos de Algoritmos, Datos y Programas", 1, 1),
-        Subject("orgcomp", "Organización de Computadoras", 1, 1),
-        Subject("mat1", "Matemática 1", 1, 1),
+    val subjectsForCurrentCareer: List<Subject>
+        get() = SubjectsData.subjectsForCareer(_selectedCareerId.value)
 
-        // ───── 1° AÑO – 2° SEMESTRE ─────
-        Subject("tallerprog", "Taller de Programación", 1, 2),
-        Subject("arqcomp", "Arquitectura de Computadoras", 1, 2),
-        Subject("mat2", "Matemática 2", 1, 2),
+    fun availableYears(): List<Int> =
+        (1..selectedCareer.years).toList()
 
-        // ───── 2° AÑO – 1° SEMESTRE ─────
-        Subject("fod", "Fundamentos de Organización de Datos", 2, 1),
-        Subject("ayed", "Algoritmos y Estructuras de Datos", 2, 1),
-        Subject("seminario", "Seminario de Lenguajes", 2, 1),
-        Subject("mat3", "Matemática 3", 2, 1),
+    fun subjectsByYear(year: Int): List<Subject> =
+        subjectsForCurrentCareer.filter { it.year == year }
 
-        // ───── 2° AÑO – 2° SEMESTRE ─────
-        Subject("bdd", "Diseño de Bases de Datos", 2, 2),
-        Subject("introso", "Introducción a los Sistemas Operativos", 2, 2),
-        Subject("oo1", "Orientación a Objetos 1", 2, 2),
+    /* ───── Estados del usuario ───── */
 
-        // ───── 3° AÑO – 1° SEMESTRE ─────
-        Subject("ingsoft1", "Ingeniería de Software 1", 3, 1),
-        Subject("paradigmas", "Conceptos y Paradigmas de Lenguajes de Programación", 3, 1),
-        Subject("redes", "Redes y Comunicaciones", 3, 1),
-
-        // ───── 3° AÑO – 2° SEMESTRE ─────
-        Subject("oo2", "Orientación a Objetos 2", 3, 2),
-        Subject("concurrente", "Programación Concurrente", 3, 2),
-        Subject("labsoft", "Laboratorio de Software", 3, 2),
-
-        // ───── 4° AÑO – 1° SEMESTRE ─────
-        Subject("so", "Sistemas Operativos", 4, 1),
-        Subject("computabilidad", "Computabilidad y Complejidad", 4, 1),
-
-        // ───── 4° AÑO – 2° SEMESTRE ─────
-        Subject("distribuida", "Programación Distribuida y Tiempo Real", 4, 2),
-        Subject("ux", "Diseño de Experiencia de Usuario", 4, 2),
-        Subject("mat4", "Matemática 4", 4, 2),
-
-        // ───── 5° AÑO ─────
-        Subject("proyecto", "Proyecto de Software", 5, 1),
-        Subject("aspectos", "Aspectos Sociales y Profesionales de Informática", 5, 1),
-        Subject("tesina", "Tesina de Licenciatura", 5, 2)
-    )
-
-
-
-    // Estado del usuario por materia
     private val _userStatuses =
         MutableStateFlow<Map<String, UserSubjectStatus>>(emptyMap())
 
-    val userStatuses: StateFlow<Map<String, UserSubjectStatus>> = _userStatuses
+    val userStatuses: StateFlow<Map<String, UserSubjectStatus>> =
+        _userStatuses.asStateFlow()
 
-    // 🔄 Actualizar estado de una materia
     fun updateStatus(
         subjectId: String,
         status: SubjectStatus,
@@ -102,7 +59,7 @@ class SubjectsViewModel : ViewModel() {
 
         updated[subjectId] = UserSubjectStatus(
             subjectId = subjectId,
-            careerId = currentCareer.id,
+            careerId = _selectedCareerId.value,
             status = status,
             grade = grade
         )
@@ -110,45 +67,22 @@ class SubjectsViewModel : ViewModel() {
         _userStatuses.value = updated
     }
 
-    // 📅 Años disponibles según la carrera
-    fun availableYears(): List<Int> =
-        (1..currentCareer.years).toList()
+    /* ───── Progreso ───── */
 
-    // 📘 Materias filtradas por año
-    fun subjectsByYear(year: Int): List<Subject> =
-        subjects.filter { it.year == year }
+    fun approvedCount(): Int =
+        userStatuses.value.values.count { it.isApproved() }
 
-    // 📊 PROGRESO POR AÑO (ESTA ERA LA FUNCIÓN QUE FALTABA)
-    fun progressByYear(): Map<Int, Float> {
-        val years = (1..currentCareer.years).toList()
-
-        return years.associateWith { year ->
-            val subjectsOfYear = subjects.filter { it.year == year }
-
-            if (subjectsOfYear.isEmpty()) {
-                0f
-            } else {
-                val approved = subjectsOfYear.count { subject ->
-                    userStatuses.value[subject.id]?.isApproved() == true
-                }
-                approved.toFloat() / subjectsOfYear.size.toFloat()
-            }
-        }
+    fun progress(): Float {
+        val total = subjectsForCurrentCareer.size
+        if (total == 0) return 0f
+        return approvedCount().toFloat() / total
     }
 
-    // ───── INSIGHTS AUTOMÁTICOS ─────
+    /* ───── Insights ───── */
 
     fun getInsights(): List<Insight> {
         val insights = mutableListOf<Insight>()
 
-        addPendingFinalsInsight(insights)
-        addMostDelayedYearInsight(insights)
-        addAverageInsight(insights)
-
-        return insights
-    }
-
-    private fun addPendingFinalsInsight(insights: MutableList<Insight>) {
         val pendingFinals = userStatuses.value.values.count {
             it.status == SubjectStatus.COURSE_APPROVED
         }
@@ -162,52 +96,7 @@ class SubjectsViewModel : ViewModel() {
                 )
             )
         }
+
+        return insights
     }
-
-
-    private fun addMostDelayedYearInsight(insights: MutableList<Insight>) {
-        val progress = progressByYear()
-        val mostDelayed = progress.minByOrNull { it.value }
-
-        mostDelayed?.let { (year, value) ->
-            if (value < 1f) {
-                insights.add(
-                    Insight(
-                        icon = "📊",
-                        message = "El ${year}° año es el que más te falta completar",
-                        type = InsightType.INFO
-                    )
-                )
-            }
-        }
-    }
-
-
-    private fun addAverageInsight(insights: MutableList<Insight>) {
-        val grades = userStatuses.value.values
-            .filter { it.hasGrade() }
-            .mapNotNull { it.grade }
-
-        if (grades.isNotEmpty()) {
-            val average = grades.average()
-
-            insights.add(
-                Insight(
-                    icon = if (average < 6) "⚠️" else "⭐",
-                    message =
-                        if (average < 6)
-                            "Tu promedio es ${"%.2f".format(average)}. Tal vez convenga priorizar finales"
-                        else
-                            "¡Muy bien! Tu promedio actual es ${"%.2f".format(average)}",
-                    type = if (average < 6)
-                        InsightType.WARNING
-                    else
-                        InsightType.SUCCESS
-                )
-            )
-        }
-    }
-
-
-
 }

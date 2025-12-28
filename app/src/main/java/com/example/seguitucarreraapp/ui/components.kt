@@ -18,3 +18,4 @@ fun SectionDivider() {
         thickness = 1.dp
     )
 }
+

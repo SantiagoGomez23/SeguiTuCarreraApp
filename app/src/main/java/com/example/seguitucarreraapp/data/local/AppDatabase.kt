@@ -10,13 +10,17 @@ import com.example.seguitucarreraapp.data.local.dao.SubjectDao
 import com.example.seguitucarreraapp.data.local.dao.UserSubjectStatusDao
 import com.example.seguitucarreraapp.data.local.entity.SubjectEntity
 import com.example.seguitucarreraapp.data.local.entity.UserSubjectStatusEntity
+import com.example.seguitucarreraapp.data.local.entity.CareerEntity
+import com.example.seguitucarreraapp.data.local.dao.CareerDao
+
 
 @Database(
     entities = [
         SubjectEntity::class,
-        UserSubjectStatusEntity::class
+        UserSubjectStatusEntity::class,
+        CareerEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(SubjectStatusConverter::class)
@@ -24,6 +28,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun subjectDao(): SubjectDao
     abstract fun userSubjectStatusDao(): UserSubjectStatusDao
+
+    abstract fun careerDao(): CareerDao
 
     companion object {
 

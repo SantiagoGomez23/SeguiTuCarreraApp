@@ -6,7 +6,8 @@ import com.example.seguitucarreraapp.data.model.SubjectStatus
 
 @Entity(tableName = "user_subject_status")
 data class UserSubjectStatusEntity(
-    @PrimaryKey val subjectId: String,
+    @PrimaryKey
+    val subjectId: String,
     val careerId: String,
     val status: SubjectStatus,
     val grade: Int?
