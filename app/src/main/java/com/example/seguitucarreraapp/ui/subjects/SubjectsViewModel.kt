@@ -1,25 +1,30 @@
 package com.example.seguitucarreraapp.ui.subjects
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.viewModelScope
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
 import com.example.seguitucarreraapp.data.preferences.CareerPreferences
+import com.example.seguitucarreraapp.data.repository.SubjectStatusRepository
 import com.example.seguitucarreraapp.ui.insights.Insight
 import com.example.seguitucarreraapp.ui.insights.InsightType
 import com.example.seguitucarreraapp.ui.subjects.model.Career
 import com.example.seguitucarreraapp.ui.subjects.model.Subject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-class SubjectsViewModel(careerPreferences: CareerPreferences) : ViewModel() {
+class SubjectsViewModel(
+    private val careerPreferences: CareerPreferences,
+    private val repository: SubjectStatusRepository
+) : ViewModel() {
 
     /* ───── Carreras ───── */
 
     val careers: List<Career> = SubjectsData.careers
 
     private val _selectedCareerId =
-        MutableStateFlow(SubjectsData.careers.first().id)
+        MutableStateFlow(careerPreferences.getCareerId() ?: careers.first().id)
 
     val selectedCareerId: StateFlow<String> =
         _selectedCareerId.asStateFlow()
@@ -28,7 +33,10 @@ class SubjectsViewModel(careerPreferences: CareerPreferences) : ViewModel() {
         get() = SubjectsData.careerById(_selectedCareerId.value)
 
     fun selectCareer(careerId: String) {
-        _selectedCareerId.value = careerId
+        viewModelScope.launch {
+            _selectedCareerId.value = careerId
+            careerPreferences.saveCareerId(careerId)
+        }
     }
 
     /* ───── Materias ───── */
@@ -42,40 +50,107 @@ class SubjectsViewModel(careerPreferences: CareerPreferences) : ViewModel() {
     fun subjectsByYear(year: Int): List<Subject> =
         subjectsForCurrentCareer.filter { it.year == year }
 
-    /* ───── Estados del usuario ───── */
+    /* ───── Estados del usuario (Room) ───── */
 
-    private val _userStatuses =
-        MutableStateFlow<Map<String, UserSubjectStatus>>(emptyMap())
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     val userStatuses: StateFlow<Map<String, UserSubjectStatus>> =
-        _userStatuses.asStateFlow()
+        selectedCareerId
+            .flatMapLatest { careerId ->
+                repository.observeStatuses(careerId)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyMap()
+            )
 
     fun updateStatus(
         subjectId: String,
         status: SubjectStatus,
         grade: Int?
     ) {
-        val updated = _userStatuses.value.toMutableMap()
-
-        updated[subjectId] = UserSubjectStatus(
-            subjectId = subjectId,
-            careerId = _selectedCareerId.value,
-            status = status,
-            grade = grade
-        )
-
-        _userStatuses.value = updated
+        viewModelScope.launch {
+            repository.saveStatus(
+                UserSubjectStatus(
+                    subjectId = subjectId,
+                    careerId = selectedCareer.id,
+                    status = status,
+                    grade = grade
+                )
+            )
+        }
     }
 
-    /* ───── Progreso ───── */
+    /* ───── PROGRESO (REACTIVO) ───── */
 
-    fun approvedCount(): Int =
-        userStatuses.value.values.count { it.isApproved() }
+    val careerProgressFlow: StateFlow<Float> =
+        userStatuses
+            .map { statuses ->
+                val total = subjectsForCurrentCareer.size
+                if (total == 0) 0f
+                else {
+                    statuses.values.count { it.isApproved() }
+                        .toFloat() / total
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0f
+            )
 
-    fun progress(): Float {
-        val total = subjectsForCurrentCareer.size
-        if (total == 0) return 0f
-        return approvedCount().toFloat() / total
+    val progressByYearFlow: StateFlow<Map<Int, Float>> =
+        userStatuses
+            .map { statuses ->
+                availableYears().associateWith { year ->
+                    val subjectsOfYear =
+                        subjectsForCurrentCareer.filter { it.year == year }
+
+                    if (subjectsOfYear.isEmpty()) 0f
+                    else {
+                        val approved = subjectsOfYear.count { subject ->
+                            statuses[subject.id]?.isApproved() == true
+                        }
+                        approved.toFloat() / subjectsOfYear.size
+                    }
+                }
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyMap()
+            )
+
+    /* ───── Correlativas ───── */
+
+    fun isSubjectLocked(subject: Subject): Boolean {
+
+        val statuses = userStatuses.value
+
+        if (subject.prerequisites.isEmpty()) return false
+
+        return subject.prerequisites.any { prerequisite ->
+            val requiredStatus =
+                statuses[prerequisite.requiredSubjectId]
+                    ?: return@any true
+
+            !requiredStatus.satisfies(prerequisite.type)
+        }
+    }
+
+    fun missingPrerequisites(subject: Subject): List<String> {
+
+        val statuses = userStatuses.value
+
+        return subject.prerequisites.mapNotNull { prerequisite ->
+            val status = statuses[prerequisite.requiredSubjectId]
+
+            when {
+                status == null -> prerequisite.requiredSubjectId
+                !status.satisfies(prerequisite.type) -> prerequisite.requiredSubjectId
+                else -> null
+            }
+        }
     }
 
     /* ───── Insights ───── */
@@ -98,5 +173,25 @@ class SubjectsViewModel(careerPreferences: CareerPreferences) : ViewModel() {
         }
 
         return insights
+    }
+
+    /* ───── Recomendaciones ───── */
+
+    fun recommendedSubjects(max: Int = 3): List<Subject> {
+
+        val statuses = userStatuses.value
+
+        return subjectsForCurrentCareer
+            .filter { subject ->
+                val status = statuses[subject.id]
+
+                val notStarted =
+                    status == null ||
+                            status.status == SubjectStatus.NOT_STARTED
+
+                notStarted && !isSubjectLocked(subject)
+            }
+            .sortedBy { it.year }
+            .take(max)
     }
 }

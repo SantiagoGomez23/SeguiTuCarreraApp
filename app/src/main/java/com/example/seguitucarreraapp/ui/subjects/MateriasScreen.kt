@@ -12,6 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.seguitucarreraapp.data.model.SubjectStatus
+import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import com.example.seguitucarreraapp.ui.home.SubjectItem
+import com.example.seguitucarreraapp.ui.subjects.components.YearProgressBars
 
 @Composable
 fun MateriasScreen(
@@ -19,10 +23,20 @@ fun MateriasScreen(
 ) {
     val career = viewModel.selectedCareer
 
+    val userStatuses by viewModel.userStatuses.collectAsState()
+    val careerProgress by viewModel.careerProgressFlow.collectAsState()
+    val progressByYear by viewModel.progressByYearFlow.collectAsState()
+
     var selectedYear by remember { mutableStateOf(1) }
 
     val years = viewModel.availableYears()
-    val subjects = viewModel.subjectsByYear(selectedYear)
+    val subjectsOfYear = viewModel.subjectsByYear(selectedYear)
+
+    val subjectsBySemester =
+        subjectsOfYear.groupBy { it.semester }.toSortedMap()
+
+    val approvedCount = userStatuses.values.count { it.isApproved() }
+    val totalSubjects = viewModel.subjectsForCurrentCareer.size
 
     LazyColumn(
         modifier = Modifier
@@ -41,6 +55,46 @@ fun MateriasScreen(
             )
         }
 
+        /* ───── PROGRESO GENERAL ───── */
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(Modifier.padding(16.dp)) {
+
+                    Text(
+                        text = "Progreso de la carrera",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = "${(careerProgress * 100).toInt()}%",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    LinearProgressIndicator(
+                        progress = { careerProgress },
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        text = "$approvedCount de $totalSubjects materias aprobadas",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+
         /* ───── SELECTOR DE AÑO ───── */
         item {
             LazyRow(
@@ -50,29 +104,119 @@ fun MateriasScreen(
                     FilterChip(
                         selected = year == selectedYear,
                         onClick = { selectedYear = year },
-                        label = {
-                            Text(text = "${year}° Año")
+                        label = { Text("${year}° Año") }
+                    )
+                }
+            }
+        }
+
+        /* ───── MATERIAS POR SEMESTRE ───── */
+        if (subjectsBySemester.isEmpty()) {
+
+            item {
+                Text("⚠️ No hay materias para este año")
+            }
+
+        } else {
+
+            subjectsBySemester.forEach { (semester, subjects) ->
+
+                item {
+                    Text(
+                        text = "$semester° Semestre",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                items(subjects) { subject ->
+
+                    val status =
+                        userStatuses[subject.id]
+                            ?: UserSubjectStatus(
+                                subjectId = subject.id,
+                                careerId = career.id,
+                                status = SubjectStatus.NOT_STARTED,
+                                grade = null
+                            )
+
+                    val isLocked = viewModel.isSubjectLocked(subject)
+                    val missing = viewModel.missingPrerequisites(subject)
+
+                    val lockReason =
+                        if (isLocked && missing.isNotEmpty()) {
+                            "Requiere: ${missing.joinToString()}"
+                        } else null
+
+                    SubjectItem(
+                        subjectName = subject.name,
+                        userStatus = status,
+                        isLocked = isLocked,
+                        lockReason = lockReason,
+                        onStatusChange = { newStatus, grade ->
+                            viewModel.updateStatus(
+                                subjectId = subject.id,
+                                status = newStatus,
+                                grade = grade
+                            )
                         }
                     )
                 }
             }
         }
 
-        /* ───── LISTA DE MATERIAS ───── */
-        if (subjects.isEmpty()) {
-            item {
-                Text("⚠️ No hay materias para este año")
+        /* ───── PROGRESO POR AÑO ───── */
+        item {
+            Column {
+                Text(
+                    text = "Progreso por año",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                YearProgressBars(
+                    progressByYear = progressByYear
+                )
             }
-        } else {
-            items(subjects) { subject ->
+        }
+
+        /* ───── RECOMENDACIONES ───── */
+        val recommendations = viewModel.recommendedSubjects()
+
+        if (recommendations.isNotEmpty()) {
+
+            item {
+                Text(
+                    text = "💡 Recomendado para cursar",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            items(recommendations) { subject ->
+
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = subject.name,
-                        modifier = Modifier.padding(16.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                     )
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+
+                        Text(
+                            text = subject.name,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Text(
+                            text = "${subject.year}° año · ${subject.semester}° semestre",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
                 }
             }
         }

@@ -1,16 +1,17 @@
 package com.example.seguitucarreraapp.ui.navigation
 
-import Routes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.seguitucarreraapp.auth.AuthScreen
 import com.example.seguitucarreraapp.auth.AuthViewModel
+import com.example.seguitucarreraapp.data.local.AppDatabase
 import com.example.seguitucarreraapp.data.preferences.CareerPreferences
-import com.example.seguitucarreraapp.ui.home.HomeScreen
+import com.example.seguitucarreraapp.data.repository.SubjectStatusRepository
 import com.example.seguitucarreraapp.ui.subjects.MateriasScreen
 import com.example.seguitucarreraapp.ui.subjects.SubjectsViewModel
 
@@ -21,12 +22,27 @@ fun NavGraph(
     val navController = rememberNavController()
     val context = LocalContext.current
 
+    // ───── Data layer ─────
     val careerPreferences = remember {
         CareerPreferences(context)
     }
 
+    val database = remember {
+        AppDatabase.getInstance(context)
+    }
+
+    val subjectStatusRepository = remember {
+        SubjectStatusRepository(
+            database.userSubjectStatusDao()
+        )
+    }
+
+    // ───── Subjects ViewModel ─────
     val subjectsViewModel = remember {
-        SubjectsViewModel(careerPreferences)
+        SubjectsViewModel(
+            careerPreferences = careerPreferences,
+            repository = subjectStatusRepository
+        )
     }
 
     val startDestination =
@@ -55,7 +71,5 @@ fun NavGraph(
                 viewModel = subjectsViewModel
             )
         }
-
     }
 }
-
