@@ -11,9 +11,12 @@ import com.example.seguitucarreraapp.auth.AuthScreen
 import com.example.seguitucarreraapp.auth.AuthViewModel
 import com.example.seguitucarreraapp.data.local.AppDatabase
 import com.example.seguitucarreraapp.data.preferences.CareerPreferences
+import com.example.seguitucarreraapp.data.remote.FirebaseSubjectService
 import com.example.seguitucarreraapp.data.repository.SubjectStatusRepository
 import com.example.seguitucarreraapp.ui.subjects.MateriasScreen
 import com.example.seguitucarreraapp.ui.subjects.SubjectsViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun NavGraph(
@@ -22,22 +25,31 @@ fun NavGraph(
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // ───── Data layer ─────
+    // ───── DataStore ─────
     val careerPreferences = remember {
         CareerPreferences(context)
     }
 
+    // ───── Room ─────
     val database = remember {
         AppDatabase.getInstance(context)
     }
 
+    // ───── Firebase ─────
+    val firebaseService = remember {
+        FirebaseSubjectService()
+    }
+
+
+    // ───── Repository ─────
     val subjectStatusRepository = remember {
         SubjectStatusRepository(
-            database.userSubjectStatusDao()
+            dao = database.userSubjectStatusDao(),
+            firebase = firebaseService
         )
     }
 
-    // ───── Subjects ViewModel ─────
+    // ───── ViewModel ─────
     val subjectsViewModel = remember {
         SubjectsViewModel(
             careerPreferences = careerPreferences,

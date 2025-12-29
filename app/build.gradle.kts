@@ -44,51 +44,51 @@ android {
 }
 
 dependencies {
+    /* ───── Core / Lifecycle ───── */
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
+    /* ───── Compose ───── */
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.foundation)
+    implementation("androidx.compose.ui:ui-text")
 
-    // ❌ ELIMINADO: implementation(libs.androidx.ui)
-
-    // Navigation
+    /* ───── Navigation ───── */
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // ViewModel
+    /* ───── ViewModel ───── */
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
 
-    // Room
+    /* ───── Room ───── */
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation(libs.androidx.compose.foundation)
     kapt("androidx.room:room-compiler:2.6.1")
 
-    // DataStore
+    /* ───── DataStore ───── */
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    // Animaciones
+    /* ───── Animaciones ───── */
     implementation("com.airbnb.android:lottie-compose:6.4.0")
 
-    // Charts (Vico)
+    /* ───── Charts ───── */
     implementation("com.patrykandpatrick.vico:compose:1.15.0")
     implementation("com.patrykandpatrick.vico:compose-m3:1.15.0")
 
-    // Firebase
+    /* ───── Firebase (CORRECTO) ───── */
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
     implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
 
-    // Gson
+    /* ───── Utilidades ───── */
     implementation("com.google.code.gson:gson:2.10.1")
 
-    // Compose Text (CLAVE para KeyboardOptions)
-    implementation("androidx.compose.ui:ui-text")
-
+    /* ───── Testing ───── */
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

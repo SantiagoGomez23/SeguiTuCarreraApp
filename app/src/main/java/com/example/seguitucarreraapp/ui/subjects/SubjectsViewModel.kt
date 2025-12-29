@@ -32,6 +32,13 @@ class SubjectsViewModel(
     val selectedCareer: Career
         get() = SubjectsData.careerById(_selectedCareerId.value)
 
+    init {
+        // 🔥 Restaurar datos desde Firebase al iniciar
+        viewModelScope.launch {
+            repository.restoreFromFirebase()
+        }
+    }
+
     fun selectCareer(careerId: String) {
         viewModelScope.launch {
             _selectedCareerId.value = careerId
@@ -50,7 +57,7 @@ class SubjectsViewModel(
     fun subjectsByYear(year: Int): List<Subject> =
         subjectsForCurrentCareer.filter { it.year == year }
 
-    /* ───── Estados del usuario (Room) ───── */
+    /* ───── Estados del usuario (Room + Firebase) ───── */
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val userStatuses: StateFlow<Map<String, UserSubjectStatus>> =
@@ -81,45 +88,41 @@ class SubjectsViewModel(
         }
     }
 
-    /* ───── PROGRESO (REACTIVO) ───── */
+    /* ───── PROGRESO (REACTIVO CORRECTO) ───── */
 
     val careerProgressFlow: StateFlow<Float> =
-        userStatuses
-            .map { statuses ->
-                val total = subjectsForCurrentCareer.size
-                if (total == 0) 0f
-                else {
-                    statuses.values.count { it.isApproved() }
-                        .toFloat() / total
-                }
+        combine(userStatuses, selectedCareerId) { statuses, _ ->
+            val total = subjectsForCurrentCareer.size
+            if (total == 0) 0f
+            else {
+                statuses.values.count { it.isApproved() }
+                    .toFloat() / total
             }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = 0f
-            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 0f
+        )
 
     val progressByYearFlow: StateFlow<Map<Int, Float>> =
-        userStatuses
-            .map { statuses ->
-                availableYears().associateWith { year ->
-                    val subjectsOfYear =
-                        subjectsForCurrentCareer.filter { it.year == year }
+        combine(userStatuses, selectedCareerId) { statuses, _ ->
+            availableYears().associateWith { year ->
+                val subjectsOfYear =
+                    subjectsForCurrentCareer.filter { it.year == year }
 
-                    if (subjectsOfYear.isEmpty()) 0f
-                    else {
-                        val approved = subjectsOfYear.count { subject ->
-                            statuses[subject.id]?.isApproved() == true
-                        }
-                        approved.toFloat() / subjectsOfYear.size
+                if (subjectsOfYear.isEmpty()) 0f
+                else {
+                    val approved = subjectsOfYear.count { subject ->
+                        statuses[subject.id]?.isApproved() == true
                     }
+                    approved.toFloat() / subjectsOfYear.size
                 }
             }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyMap()
-            )
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = emptyMap()
+        )
 
     /* ───── Correlativas ───── */
 
