@@ -77,6 +77,7 @@ fun AuthScreen(
                 Text(if (isLogin) "Entrar" else "Registrarse")
             }
 
+
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = { isLogin = !isLogin }) {

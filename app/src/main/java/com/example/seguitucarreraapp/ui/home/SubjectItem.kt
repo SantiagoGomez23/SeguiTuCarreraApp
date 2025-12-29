@@ -1,218 +1,167 @@
 package com.example.seguitucarreraapp.ui.home
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.seguitucarreraapp.data.model.SubjectStatus
 import com.example.seguitucarreraapp.data.model.UserSubjectStatus
+import androidx.compose.foundation.layout.FlowRow
 
 @Composable
 fun SubjectItem(
     subjectName: String,
     userStatus: UserSubjectStatus,
-    isLocked: Boolean,
-    lockReason: String?,
+    isLocked: Boolean = false,
+    lockReason: String? = null,
     onStatusChange: (SubjectStatus, Int?) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var editingGrade by remember { mutableStateOf(false) }
-
-    var gradeInput by remember {
-        mutableStateOf(userStatus.grade?.toString() ?: "")
-    }
-
-    val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    // ───── Animaciones ─────
-    val scale by animateFloatAsState(
-        targetValue = if (!isLocked) 1f else 0.98f,
-        animationSpec = tween(300),
-        label = "scale"
-    )
-
-    val alpha by animateFloatAsState(
-        targetValue = if (isLocked) 0.4f else 1f,
-        animationSpec = tween(300),
-        label = "alpha"
-    )
-
-    // ───── Foco automático al editar ─────
-    LaunchedEffect(editingGrade) {
-        if (editingGrade) {
-            focusRequester.requestFocus()
-        }
-    }
+    var isEditingGrade by remember { mutableStateOf(false) }
+    var pendingStatus by remember { mutableStateOf<SubjectStatus?>(null) }
+    var gradeText by remember { mutableStateOf("") }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .scale(scale)
-            .alpha(alpha)
-            .clickable(enabled = !isLocked && !editingGrade) {
-                expanded = !expanded
-            },
-        shape = RoundedCornerShape(14.dp)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLocked) Color(0xFFE5E7EB) else Color.White
+        )
     ) {
         Column(Modifier.padding(16.dp)) {
 
-            /* ───── Título ───── */
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Text(
+                text = subjectName,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            if (isLocked && lockReason != null) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = lockReason,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFF6B7280)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(subjectName, style = MaterialTheme.typography.bodyLarge)
-                if (isLocked) Text("🔒")
-            }
 
-            Spacer(Modifier.height(4.dp))
-
-            /* ───── Estado ───── */
-            when {
-                isLocked && lockReason != null -> {
-                    Text(lockReason, style = MaterialTheme.typography.bodySmall)
-                }
-
-                userStatus.hasGrade() -> {
-                    Text(
-                        text = "Nota: ${userStatus.grade}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                else -> {
-                    Text(
-                        text = statusLabel(userStatus.status),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
-
-            /* ───── Acciones ───── */
-            if (!isLocked && expanded) {
-
-                Spacer(Modifier.height(12.dp))
-
-                StatusButton("No iniciada") {
-                    editingGrade = false
-                    onStatusChange(SubjectStatus.NOT_STARTED, null)
-                }
-
-                StatusButton("Cursando") {
-                    editingGrade = false
+                StatusButton(
+                    "Cursando",
+                    userStatus.status == SubjectStatus.IN_PROGRESS,
+                    !isLocked
+                ) {
                     onStatusChange(SubjectStatus.IN_PROGRESS, null)
                 }
 
-                StatusButton("Cursada aprobada") {
-                    editingGrade = false
+                StatusButton(
+                    "Cursada aprobada",
+                    userStatus.status == SubjectStatus.COURSE_APPROVED,
+                    !isLocked
+                ) {
                     onStatusChange(SubjectStatus.COURSE_APPROVED, null)
                 }
 
-                StatusButton("Materia promocionada") {
-                    editingGrade = true
-                    expanded = true
-                    onStatusChange(SubjectStatus.PROMOTED, userStatus.grade)
+                StatusButton(
+                    "Final aprobado",
+                    userStatus.status == SubjectStatus.FINAL_APPROVED,
+                    !isLocked
+                ) {
+                    pendingStatus = SubjectStatus.FINAL_APPROVED
+                    isEditingGrade = true
+                    gradeText = ""
                 }
 
-                StatusButton("Final aprobado") {
-                    editingGrade = true
-                    expanded = true
-                    onStatusChange(SubjectStatus.PROMOTED, userStatus.grade)
+                StatusButton(
+                    "Promocionada",
+                    userStatus.status == SubjectStatus.PROMOTED,
+                    !isLocked
+                ) {
+                    pendingStatus = SubjectStatus.PROMOTED
+                    isEditingGrade = true
+                    gradeText = ""
                 }
+            }
 
-                /* ───── Ingreso de nota ───── */
-                if (editingGrade && userStatus.status == SubjectStatus.PROMOTED) {
+            if (!isEditingGrade && userStatus.hasGrade()) {
+                Spacer(Modifier.height(8.dp))
 
-                    Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Nota: ${userStatus.grade}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
-                    OutlinedTextField(
-                        value = gradeInput,
-                        onValueChange = { input ->
-                            if (isValidGradeInput(input)) {
-                                gradeInput = input
+
+            if (isEditingGrade && pendingStatus != null && !isLocked) {
+                Spacer(Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = gradeText,
+                    onValueChange = { value ->
+                        if (value.isEmpty()) {
+                            gradeText = ""
+                            return@OutlinedTextField
+                        }
+                        if (!value.all { it.isDigit() }) return@OutlinedTextField
+                        if (value.length > 2) return@OutlinedTextField
+                        if (value.startsWith("0") && value.length > 1) return@OutlinedTextField
+
+                        val number = value.toIntOrNull() ?: return@OutlinedTextField
+                        if (number !in 0..10) return@OutlinedTextField
+
+                        gradeText = value
+                    },
+                    label = { Text("Nota (0–10)") },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            val grade = gradeText.toIntOrNull()
+                            if (grade != null && pendingStatus != null) {
+                                onStatusChange(pendingStatus!!, grade)
                             }
-                        },
-                        label = { Text("Nota (0–10)") },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                focusManager.clearFocus()
-                                editingGrade = false
-                                gradeInput.toIntOrNull()?.let {
-                                    onStatusChange(
-                                        SubjectStatus.PROMOTED,
-                                        it
-                                    )
-                                }
-                            }
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester)
-                    )
-                }
+                            isEditingGrade = false
+                            pendingStatus = null
+                            focusManager.clearFocus()
+                        }
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
 }
-
-/* ───── Helpers ───── */
 
 @Composable
 private fun StatusButton(
     text: String,
+    selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit
 ) {
-    Button(
+    FilterChip(
+        selected = selected,
+        enabled = enabled,
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-    ) {
-        Text(text)
-    }
-}
-
-private fun statusLabel(status: SubjectStatus): String =
-    when (status) {
-        SubjectStatus.NOT_STARTED -> "No iniciada"
-        SubjectStatus.IN_PROGRESS -> "Cursando"
-        SubjectStatus.COURSE_APPROVED -> "Cursada aprobada"
-        SubjectStatus.PROMOTED -> "Materia promocionada"
-        SubjectStatus.FINAL_APPROVED -> "Final aprobado"
-    }
-
-/**
- * Validación de nota:
- * - solo números
- * - rango 0–10
- * - no "00"
- */
-private fun isValidGradeInput(input: String): Boolean {
-    if (input.isEmpty()) return true
-    if (!input.all { it.isDigit() }) return false
-    if (input.length > 2) return false
-    if (input == "00") return false
-
-    val value = input.toIntOrNull() ?: return false
-    return value in 0..10
+        label = { Text(text) }
+    )
 }
